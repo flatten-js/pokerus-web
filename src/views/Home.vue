@@ -74,6 +74,31 @@
               </v-dialog>
             </div>
           </template>
+
+          <template v-slot:body="{ items, isSelected, select }">
+            <tbody
+              v-model="log_items"
+              is="draggable"
+              tag="tbody"
+            >
+              <template v-for="(item, i) in items">
+                <tr :key="i">
+                  <td>
+                    <v-simple-checkbox
+                      class="v-data-table__checkbox"
+                      :value="isSelected(item)"
+                      @input="select(item, $event)"
+                    />
+                  </td>
+                  <template v-for="header in log_headers">
+                    <td :key="header.value">
+                      {{ item[header.value] }}
+                    </td>
+                  </template>
+                </tr>
+              </template>
+            </tbody>
+          </template>
         </v-data-table>
       </v-col>
     </v-row>
@@ -81,9 +106,13 @@
 </template>
 
 <script>
+import draggable from 'vuedraggable'
 import { v4 as uuidv4 } from 'uuid'
 
 export default {
+  components: {
+    draggable
+  },
   data: () => ({
     dialog: false,
     _selected: [],
