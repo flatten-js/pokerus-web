@@ -110,7 +110,15 @@
                     </td>
                     <template v-for="header in log_headers">
                       <td :key="header.value">
-                        {{ item[header.value] }}
+                        <template v-if="header.value.includes('path')">
+                          <v-img
+                            :src="item[header.value]"
+                            max-width="160"
+                          />
+                        </template>
+                        <template v-else>
+                          {{ item[header.value] }}
+                        </template>
                       </td>
                     </template>
                   </tr>
@@ -149,6 +157,7 @@ export default {
 
     _log_headers: [
       { text: 'Status', value: 'status' },
+      { text: 'Frame', value: 'frame_path' },
       { text: 'Name', value: 'name' },
       { text: 'Updated At', value: 'updated_at' }
     ],
@@ -156,6 +165,7 @@ export default {
       // {
       //   uuid: uuidv4(),
       //   status: 'auto',
+      //   frame_path: 'https://cdn.pixabay.com/photo/2021/09/15/15/48/seals-6627197_960_720.jpg',
       //   name: 'test',
       //   updated_at: moment().format()
       // }
@@ -170,9 +180,7 @@ export default {
       this.log_items = items
     }, 'init_js')
 
-    window.eel.expose(name => {
-      this.addLog(name)
-    }, 'update_js')
+    window.eel.expose(this.addLog, 'update_js')
   },
   watch: {
     log_items(log) {
@@ -208,10 +216,11 @@ export default {
     closeDialog() {
       this.dialog = false
     },
-    addLog(name, status = 'auto') {
+    addLog(frame_path, name, status = 'auto') {
       this.log_items.unshift({
         uuid: uuidv4(),
         status,
+        frame_path,
         name,
         updated_at: moment().format()
       })
