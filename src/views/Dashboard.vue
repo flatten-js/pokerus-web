@@ -1,13 +1,8 @@
 <template>
   <v-container>
-    <v-row>
-      <v-col>
-        <h1>Pokerus</h1>
-      </v-col>
-    </v-row>
-    <v-row class="md-6">
-      <v-col cols="12" md="4">
-        <h2 class="mb-4">Counter</h2>
+    <v-row class="md-6" justify="center">
+      <v-col cols="12" lg="3" md="4">
+        <h3 class="mb-4">Counter</h3>
         <v-data-table
           class="elevation-1"
           :headers="counter_headers"
@@ -18,7 +13,8 @@
           <template v-slot:item.action="{ item }">
             <v-btn
               color="primary"
-              @click="addLog(item.name, 'edit')"
+              @click="addLog('', item.name, 'edit')"
+              depressed
               block
             >
               Add
@@ -26,8 +22,8 @@
           </template>
         </v-data-table>
       </v-col>
-      <v-col cols="12" md="8">
-        <h2 class="mb-4">Update Log</h2>
+      <v-col cols="12" lg="7" md="8">
+        <h3 class="mb-4">Update Log</h3>
         <v-data-table
           class="elevation-1"
           v-model="$data._selected"
@@ -113,7 +109,7 @@
                         <template v-if="header.value.includes('path')">
                           <v-img
                             :src="item[header.value]"
-                            max-width="160"
+                            max-width="120"
                           />
                         </template>
                         <template v-else>
