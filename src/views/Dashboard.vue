@@ -2,11 +2,40 @@
   <v-container>
     <v-row class="md-6" justify="center">
       <v-col cols="12" lg="3" md="4">
-        <h3 class="mb-4">Counter</h3>
+        <div class="d-flex align-center justify-space-between mb-4">
+          <h3>Counter</h3>
+          <v-menu>
+            <template v-slot:activator="{ attrs, on }">
+              <v-icon
+                v-bind="attrs"
+                v-on="on"
+              >
+                mdi-dots-vertical
+              </v-icon>
+            </template>
+
+            <v-list>
+              <template v-for="menu in counter_menus">
+                <v-list-item :key="menu.title" link>
+                  <template v-if="menu.popout">
+                    <a @click="openPopout(menu.to)">
+                      <v-list-item-title>{{ menu.title }}</v-list-item-title>
+                    </a>
+                  </template>
+                  <template v-else>
+                    <router-link :to="menu.to">
+                      <v-list-item-title>{{ menu.title }}</v-list-item-title>
+                    </router-link>
+                  </template>
+                </v-list-item>
+              </template>
+            </v-list>
+          </v-menu>
+        </div>
         <v-data-table
           class="elevation-1"
           :headers="counter_headers"
-          :items="counter_items"
+          :items="counters"
           mobile-breakpoint="0"
           hide-default-footer
         >
@@ -28,7 +57,7 @@
           class="elevation-1"
           v-model="$data._selected"
           :headers="log_headers"
-          :items="log_items"
+          :items="logs"
           item-key="uuid"
           mobile-breakpoint="0"
           disable-sort
@@ -83,7 +112,7 @@
             v-slot:body="{ items, headers, isSelected, select }"
           >
             <tbody
-              v-model="log_items"
+              v-model="logs"
               is="draggable"
               tag="tbody"
             >
@@ -129,9 +158,7 @@
 </template>
 
 <script>
-import { v4 as uuidv4 } from 'uuid'
-import moment from 'moment'
-
+import { mapGetters } from 'vuex'
 import draggable from 'vuedraggable'
 
 export default {
@@ -140,6 +167,7 @@ export default {
   },
   data: () => ({
     dialog: false,
+    popout: null,
     _selected: [],
 
     _counter_headers: [
@@ -147,43 +175,25 @@ export default {
       { text: 'Count', value: 'count' },
       { text: '', value: 'action' }
     ],
-    counter_default: {
-      // test: 0
-    },
+    counter_menus: [
+      { popout: true, title: 'Popout Counter', to: 'counter' }
+    ],
 
     _log_headers: [
       { text: 'Status', value: 'status' },
       { text: 'Frame', value: 'frame_path' },
       { text: 'Name', value: 'name' },
       { text: 'Updated At', value: 'updated_at' }
-    ],
-    log_items: [
-      // {
-      //   uuid: uuidv4(),
-      //   status: 'auto',
-      //   frame_path: 'https://cdn.pixabay.com/photo/2021/09/15/15/48/seals-6627197_960_720.jpg',
-      //   name: 'test',
-      //   updated_at: moment().format()
-      // }
     ]
   }),
-  mounted() {
-    const eel = window.eel
-    eel.set_host('ws://localhost:8000')
-
-    window.eel.expose((counter, items) => {
-      this.counter_default = counter
-      this.log_items = items
-    }, 'init_js')
-
-    window.eel.expose(this.addLog, 'update_js')
-  },
-  watch: {
-    log_items(log) {
-      window.eel.update_py(log)
-    }
+  async created() {
+    await this.$store.dispatch('init')
   },
   computed: {
+    ...mapGetters([
+      'logs',
+      'counters'
+    ]),
     selected() {
       return this.$data._selected.map(select => select.uuid)
     },
@@ -192,15 +202,6 @@ export default {
     },
     log_headers() {
       return this.formatHeaders(this.$data._log_headers)
-    },
-    counter_items() {
-      const data = this.log_items.reduce((acc, cur) => {
-        return { ...acc, [cur.name]: (acc[cur.name] || 0) + 1 }
-      }, { ...this.counter_default })
-
-      return Object.keys(data).reduce((acc, cur) => {
-        return [...acc, { name: cur, count: data[cur] }]
-      }, [])
     }
   },
   methods: {
@@ -209,20 +210,22 @@ export default {
         return { ...header, width: `${100 / headers.length}%` }
       })
     },
+    openPopout(to) {
+      const { popout } = this
+      if (popout == null || popout.closed) {
+        this.popout = window.open(to, '', 'width=800,height=150')
+      } else {
+        popout.focus()
+      }
+    },
     closeDialog() {
       this.dialog = false
     },
-    addLog(frame_path, name, status = 'auto') {
-      this.log_items.unshift({
-        uuid: uuidv4(),
-        status,
-        frame_path,
-        name,
-        updated_at: moment().format()
-      })
+    addLog(frame_path, name, status) {
+      this.$store.commit('add_log', { frame_path, name, status })
     },
     deleteLogs(selected) {
-      this.log_items = this.log_items.filter(item => !selected.includes(item.uuid))
+      this.$store.commit('delete_logs', { selected })
       this.$data._selected = []
       this.closeDialog()
     }

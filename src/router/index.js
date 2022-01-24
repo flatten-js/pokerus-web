@@ -6,8 +6,24 @@ Vue.use(VueRouter)
 const routes = [
   {
     path: '/',
-    name: 'Dashboard',
-    component: () => import('@/views/Dashboard.vue')
+    component: () => import('@/layouts/Default.vue'),
+    children: [
+      {
+        path: '/',
+        name: 'Dashboard',
+        component: () => import('@/views/Dashboard.vue')
+      }
+    ]
+  },
+  {
+    path: '/',
+    component: () => import('@/layouts/Simple.vue'),
+    children: [
+      {
+        path: '/counter',
+        component: () => import('@/views/Counter.vue')
+      }
+    ]
   }
 ]
 
