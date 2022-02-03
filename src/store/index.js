@@ -9,6 +9,7 @@ Vue.use(Vuex)
 export default new Vuex.Store({
   state: {
     _init: false,
+    appearances: [],
     logs: []
   },
 
@@ -19,10 +20,13 @@ export default new Vuex.Store({
     logs(state) {
       return state.logs
     },
-    counters(state) {
+    _counters(state) {
+      return state.appearances.reduce((acc, cur) => ({ ...acc, [cur]: 0 }), {})
+    },
+    counters(state, getters) {
       const data = state.logs.reduce((acc, cur) => {
         return { ...acc, [cur.name]: (acc[cur.name] || 0) + 1 }
-      }, {})
+      }, getters._counters)
 
       return Object.keys(data).reduce((acc, cur) => {
         return [...acc, { name: cur, count: data[cur] }]
@@ -62,8 +66,8 @@ export default new Vuex.Store({
       const eel = window.eel
       eel.set_host('ws://localhost:8000')
 
-      const logs = await window.eel.init_py()()
-      commit('update', { logs })
+      const data = await window.eel.init_py()()
+      commit('update', data)
 
       window.eel.expose(logs => {
         commit('update', { logs })
