@@ -9,6 +9,7 @@ Vue.use(Vuex)
 export default new Vuex.Store({
   state: {
     _init: false,
+    close: false,
     appearances: [],
     logs: []
   },
@@ -16,6 +17,9 @@ export default new Vuex.Store({
   getters: {
     init(state) {
       return state._init
+    },
+    close(state) {
+      return state.close
     },
     logs(state) {
       return state.logs
@@ -35,9 +39,6 @@ export default new Vuex.Store({
   },
 
   mutations: {
-    _init(state) {
-      state._init = true
-    },
     update(state, payload) {
       Object.keys(payload).forEach(k => state[k] = payload[k])
     },
@@ -63,8 +64,12 @@ export default new Vuex.Store({
     async init({ getters, commit }) {
       if (getters.init) return
 
-      const eel = window.eel
-      eel.set_host('ws://localhost:8000')
+      window.eel.set_host('ws://localhost:8000')
+
+      window.eel.onclose(() => {
+        commit('update', { close: true })
+        window.eel = {}
+      })
 
       const data = await window.eel.init_py()()
       commit('update', data)
@@ -77,7 +82,7 @@ export default new Vuex.Store({
         commit('add_log', { frame_path, name })
       }, 'update_js')
 
-      commit('_init')
+      commit('update', { _init: true })
     }
   },
 

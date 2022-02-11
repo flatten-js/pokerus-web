@@ -6,7 +6,7 @@ Vue.use(VueRouter)
 const routes = [
   {
     path: '/',
-    component: () => import('@/layouts/Default.vue'),
+    component: () => import('@/layouts/DefaultLayout.vue'),
     children: [
       {
         path: '/',
@@ -17,7 +17,7 @@ const routes = [
   },
   {
     path: '/',
-    component: () => import('@/layouts/Simple.vue'),
+    component: () => import('@/layouts/BaseLayout.vue'),
     children: [
       {
         path: '/counter',
